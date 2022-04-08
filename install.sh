@@ -1,26 +1,31 @@
 #!/bin/bash
-WIFI_SSID="Lux-Belair"
-WIFI_PWD="8120106de+50L"
+WPA_WIFI_SSID="Bel-Air"
+WPA_WIFI_PWD="K!ng0fbel@!r"
+HOSTAPD_WIFI_SSID="Lux-Belair"
+HOSTAPD_WIFI_PWD="8120106de+50L"
 
 echo "===> Welcome to the RouterPi installer script <==="
 
+echo "Updating raspberry pi..."
+sudo apt update && sudo apt upgrade -y
+echo "Updated ✓ \n"
+
 echo "Installing all dependencies..."
-apt update
-apt install iptables wireguard wireguard-tools hostapd dnsmasq
+sudo apt install iptables wireguard wireguard-tools hostapd dnsmasq
 echo "Installed ✓ \n"
 
 echo "Setting up wpa-supplicant..."
 echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
-country=GB" > "/etc/wpa_supplicant/wpa_supplicant-wlan0.conf"
+country=GB" > /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
 echo 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 country=GB
 
 network={
-        ssid="Bel-Air"
-        psk="K!ng0fbel@!r"
-}' > "/etc/wpa_supplicant/wpa_supplicant-wlan1.conf"
+        ssid="'$WPA_WIFI_SSID'"
+        psk="'$WPA_WIFI_PWD'"
+}' > /etc/wpa_supplicant/wpa_supplicant-wlan1.conf
 echo "Done ✓ \n"
 
 echo "Setting static ip for wlan0 and eth0..."
@@ -29,7 +34,7 @@ echo 'interface eth0
 
 interface wlan0
       static ip_address=10.20.2.1/24
-      nohook wpa_supplicant' >> "/etc/dhcpcd.conf"
+      nohook wpa_supplicant' >> /etc/dhcpcd.conf
 echo "Done ✓ \n"
 
 echo "Enabling IPv4 forwarding..."
@@ -52,13 +57,13 @@ address=/rt/wlan/10.20.1.1
 interface=wlan0
 dhcp-range=10.20.2.100,10.20.2.200,255.255.255.0,300d
 domain=wlan
-address=/rt/wlan/10.20.2.1' >> "/etc/dnsmasq.conf"
+address=/rt/wlan/10.20.2.1' >> /etc/dnsmasq.conf
 echo "Done ✓ \n"
 
 echo "Setting up hostapd..."
 sed -ir 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/g' /etc/default/hostapd
-echo 'ssid='$WIFI_SSID'
-wpa_passphrase='$WIFI_PWD'
+echo 'ssid='$HOSTAPD_WIFI_SSID'
+wpa_passphrase='$HOSTAPD_WIFI_PWD'
 
 interface=wlan0
 # the interface used by the AP
@@ -85,7 +90,7 @@ auth_algs=1
 wpa=2
 # WPA2 only
 wpa_key_mgmt=WPA-PSK
-rsn_pairwise=CCMP' > "/etc/hostapd/hostapd.conf"
+rsn_pairwise=CCMP' > /etc/hostapd/hostapd.conf
 sudo systemctl unmask hostapd.service
 sudo systemctl enable hostapd.service
 sudo systemctl start hostapd.service
