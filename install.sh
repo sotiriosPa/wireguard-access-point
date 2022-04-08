@@ -11,7 +11,7 @@ sudo apt update && sudo apt upgrade -y
 echo "Updated ✓ \n"
 
 echo "Installing all dependencies..."
-sudo apt install iptables wireguard wireguard-tools hostapd dnsmasq
+sudo apt -y install iptables wireguard wireguard-tools hostapd dnsmasq iptables-persistent
 echo "Installed ✓ \n"
 
 echo "Setting up wpa-supplicant..."
@@ -21,7 +21,6 @@ country=GB" > /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
 echo 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 country=GB
-
 network={
         ssid="'$WPA_WIFI_SSID'"
         psk="'$WPA_WIFI_PWD'"
@@ -31,14 +30,13 @@ echo "Done ✓ \n"
 echo "Setting static ip for wlan0 and eth0..."
 echo 'interface eth0
       static ip_address=10.20.1.1/24
-
 interface wlan0
       static ip_address=10.20.2.1/24
       nohook wpa_supplicant' >> /etc/dhcpcd.conf
 echo "Done ✓ \n"
 
 echo "Enabling IPv4 forwarding..."
-sed -ir 's/#{1,}?net.ipv4.ip_forward ?= ?(0|1)/net.ipv4.ip_forward = 1/g' /etc/sysctl.conf
+sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
 sudo sysctl -p
 echo "Enabled ✓"
 
@@ -53,7 +51,6 @@ echo 'interface=eth0
 dhcp-range=10.20.1.100,10.20.1.200,255.255.255.0,300d
 domain=eth
 address=/rt/wlan/10.20.1.1
-
 interface=wlan0
 dhcp-range=10.20.2.100,10.20.2.200,255.255.255.0,300d
 domain=wlan
@@ -61,10 +58,10 @@ address=/rt/wlan/10.20.2.1' >> /etc/dnsmasq.conf
 echo "Done ✓ \n"
 
 echo "Setting up hostapd..."
+sudo rfkill unblock wlan
 sed -ir 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/g' /etc/default/hostapd
 echo 'ssid='$HOSTAPD_WIFI_SSID'
 wpa_passphrase='$HOSTAPD_WIFI_PWD'
-
 interface=wlan0
 # the interface used by the AP
 hw_mode=a
@@ -83,7 +80,6 @@ wmm_enabled=1
 # QoS support
 ht_capab=[HT40-]
 #40 MHz bandwith
-
 # the name of the AP
 auth_algs=1
 # 1=wpa, 2=wep, 3=both
