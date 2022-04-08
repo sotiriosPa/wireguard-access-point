@@ -11,7 +11,7 @@ sudo apt update && sudo apt upgrade -y
 echo "Updated ✓ \n"
 
 echo "Installing all dependencies..."
-sudo apt -y install iptables wireguard wireguard-tools hostapd dnsmasq iptables-persistent
+sudo apt -y install iptables wireguard wireguard-tools hostapd dnsmasq
 echo "Installed ✓ \n"
 
 echo "Setting up wpa-supplicant..."
@@ -99,5 +99,8 @@ sudo iptables -X
 sudo iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
 sudo iptables -A FORWARD -i wg0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 sudo iptables -A FORWARD -i wlan0 -o wg0 -j ACCEPT
-sudo netfilter-persistent save
 echo "Done ✓"
+
+echo "Saving iptables..."
+sudo apt install iptables-persistent
+echo "Done ✓ \n"
